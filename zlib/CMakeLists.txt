@@ -8,13 +8,7 @@ project(
     HOMEPAGE_URL "https://zlib.net/"
     DESCRIPTION "a general-purpose lossless data-compression library")
 
-# ============================================================================
-# CPack
-# ============================================================================
-set(CPACK_PACKAGE_VENDOR "zlib-Project")
-set(CPACK_PACKAGE_DESCRIPTION_FILE ${zlib_SOURCE_DIR}/README)
-set(CPACK_RESOURCE_FILE_LICENSE ${zlib_SOURCE_DIR}/LICENSE)
-set(CPACK_RESOURCE_FILE_README ${zlib_SOURCE_DIR}/README)
+set(VERSION "1.3.1")
 
 # ============================================================================
 # configuration
