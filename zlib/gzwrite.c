@@ -147,12 +147,10 @@ local int gz_comp(gz_statep state, int flush) {
     return 0;
 }
 
-/* Compress state->skip (> 0) zeros to output.  Return -1 on a write error or
-   memory allocation failure by gz_comp(), or 0 on success. state->skip is
-   updated with the number of successfully written zeros, in case there is a
-   stall on a non-blocking write destination. */
-local int gz_zero(gz_statep state) {
-    int first, ret;
+/* Compress len zeros to output.  Return -1 on a write error or memory
+   allocation failure by gz_comp(), or 0 on success. */
+local int gz_zero(gz_statep state, z_off64_t len) {
+    int first;
     unsigned n;
     z_streamp strm = &(state->strm);
 
@@ -182,9 +180,7 @@ local int gz_zero(gz_statep state) {
 }
 
 /* Write len bytes from buf to file.  Return the number of bytes written.  If
-   the returned value is less than len, then there was an error. If the error
-   was a non-blocking stall, then the number of bytes consumed is returned.
-   For any other error, 0 is returned. */
+   the returned value is less than len, then there was an error. */
 local z_size_t gz_write(gz_statep state, voidpc buf, z_size_t len) {
     z_size_t put = len;
     int ret;
@@ -401,14 +397,8 @@ local int gz_vacate(gz_statep state) {
 
 /* -- see zlib.h -- */
 int ZEXPORTVA gzvprintf(gzFile file, const char *format, va_list va) {
-#if defined(NO_vsnprintf) && !defined(ZLIB_INSECURE)
-#warning "vsnprintf() not available -- gzprintf() stub returns Z_STREAM_ERROR"
-#warning "you can recompile with ZLIB_INSECURE defined to use vsprintf()"
-    /* prevent use of insecure vsprintf(), unless purposefully requested */
-    (void)file, (void)format, (void)va;
-    return Z_STREAM_ERROR;
-#else
-    int len, ret;
+    int len;
+    unsigned left;
     char *next;
     gz_statep state;
     z_streamp strm;
@@ -501,17 +491,6 @@ int ZEXPORTVA gzprintf(gzFile file, const char *format, int a1, int a2, int a3,
                        int a4, int a5, int a6, int a7, int a8, int a9, int a10,
                        int a11, int a12, int a13, int a14, int a15, int a16,
                        int a17, int a18, int a19, int a20) {
-#if defined(NO_snprintf) && !defined(ZLIB_INSECURE)
-#warning "snprintf() not available -- gzprintf() stub returns Z_STREAM_ERROR"
-#warning "you can recompile with ZLIB_INSECURE defined to use sprintf()"
-    /* prevent use of insecure sprintf(), unless purposefully requested */
-    (void)file, (void)format, (void)a1, (void)a2, (void)a3, (void)a4, (void)a5,
-    (void)a6, (void)a7, (void)a8, (void)a9, (void)a10, (void)a11, (void)a12,
-    (void)a13, (void)a14, (void)a15, (void)a16, (void)a17, (void)a18,
-    (void)a19, (void)a20;
-    return Z_STREAM_ERROR;
-#else
-    int ret;
     unsigned len, left;
     char *next;
     gz_statep state;
@@ -637,9 +616,8 @@ int ZEXPORT gzsetparams(gzFile file, int level, int strategy) {
     state = (gz_statep)file;
     strm = &(state->strm);
 
-    /* check that we're compressing and that there's no (serious) error */
-    if (state->mode != GZ_WRITE || (state->err != Z_OK && !state->again) ||
-            state->direct)
+    /* check that we're writing and that there's no error */
+    if (state->mode != GZ_WRITE || state->err != Z_OK || state->direct)
         return Z_STREAM_ERROR;
     gz_error(state, Z_OK, NULL);
 

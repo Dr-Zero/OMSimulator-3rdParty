@@ -24,6 +24,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
 #include <time.h>
 #ifndef ZLIB_CONST
 #  define ZLIB_CONST
@@ -1328,14 +1329,14 @@ extern int ZEXPORT zipOpenNewFileInZip4_64(zipFile file, const char* filename, c
       return ZIP_PARAMERROR;
 #endif
 
-    /* The filename and comment length must fit in 16 bits. */
+    // The filename and comment length must fit in 16 bits.
     if ((filename!=NULL) && (strlen(filename)>0xffff))
         return ZIP_PARAMERROR;
     if ((comment!=NULL) && (strlen(comment)>0xffff))
         return ZIP_PARAMERROR;
-    /* The extra field length must fit in 16 bits. If the member also requires
+    // The extra field length must fit in 16 bits. If the member also requires
     // a Zip64 extra block, that will also need to fit within that 16-bit
-    // length, but that will be checked for later. */
+    // length, but that will be checked for later.
     if ((size_extrafield_local>0xffff) || (size_extrafield_global>0xffff))
         return ZIP_PARAMERROR;
 
@@ -1700,7 +1701,7 @@ extern int ZEXPORT zipWriteInFileInZip(zipFile file, const void* buf, unsigned i
     else
 #endif
     {
-      zi->ci.stream.next_in = buf;
+      zi->ci.stream.next_in = (Bytef*)(uintptr_t)buf;
       zi->ci.stream.avail_in = len;
 
       while ((err==ZIP_OK) && (zi->ci.stream.avail_in>0))
@@ -1896,7 +1897,7 @@ extern int ZEXPORT zipCloseFileInZipRaw64(zipFile file, ZPOS64_T uncompressed_si
 
       if((uLong)(datasize + 4) > zi->ci.size_centralExtraFree)
       {
-        /* we cannot write more data to the buffer that we have room for. */
+        // we cannot write more data to the buffer that we have room for.
         return ZIP_BADZIPFILE;
       }
 

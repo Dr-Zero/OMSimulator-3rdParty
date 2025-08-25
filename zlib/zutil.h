@@ -1,5 +1,5 @@
 /* zutil.h -- internal interface and configuration of the compression library
- * Copyright (C) 1995-2026 Jean-loup Gailly, Mark Adler
+ * Copyright (C) 1995-2024 Jean-loup Gailly, Mark Adler
  * For conditions of distribution and use, see copyright notice in zlib.h
  */
 
@@ -176,10 +176,11 @@ extern z_const char * const z_errmsg[10]; /* indexed by 2-zlib_error */
 #endif
 
 /* provide prototypes for these when building zlib without LFS */
-#ifndef Z_LARGE64
-   ZEXTERN uLong ZEXPORT adler32_combine64(uLong, uLong, z_off64_t);
-   ZEXTERN uLong ZEXPORT crc32_combine64(uLong, uLong, z_off64_t);
-   ZEXTERN uLong ZEXPORT crc32_combine_gen64(z_off64_t);
+#if !defined(_WIN32) && \
+    (!defined(_LARGEFILE64_SOURCE) || _LFS64_LARGEFILE-0 == 0)
+    ZEXTERN uLong ZEXPORT adler32_combine64(uLong, uLong, z_off_t);
+    ZEXTERN uLong ZEXPORT crc32_combine64(uLong, uLong, z_off_t);
+    ZEXTERN uLong ZEXPORT crc32_combine_gen64(z_off_t);
 #endif
 
         /* common defaults */
@@ -218,9 +219,9 @@ extern z_const char * const z_errmsg[10]; /* indexed by 2-zlib_error */
 #    define zmemzero(dest, len) memset(dest, 0, len)
 #  endif
 #else
-   void ZLIB_INTERNAL zmemcpy(void FAR *, const void FAR *, z_size_t);
-   int ZLIB_INTERNAL zmemcmp(const void FAR *, const void FAR *, z_size_t);
-   void ZLIB_INTERNAL zmemzero(void FAR *, z_size_t);
+   void ZLIB_INTERNAL zmemcpy(Bytef* dest, const Bytef* source, uInt len);
+   int ZLIB_INTERNAL zmemcmp(const Bytef* s1, const Bytef* s2, uInt len);
+   void ZLIB_INTERNAL zmemzero(Bytef* dest, uInt len);
 #endif
 
 /* Diagnostic functions */

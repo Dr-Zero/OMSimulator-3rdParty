@@ -77,7 +77,6 @@
 /* f: name of file to get info on, tmzip: return value: access,
    modification and creation times, dt: dostime */
 static int filetime(const char *f, tm_zip *tmzip, uLong *dt) {
-  (void)tmzip;
   int ret = 0;
   {
       FILETIME ftLocal;
@@ -95,7 +94,8 @@ static int filetime(const char *f, tm_zip *tmzip, uLong *dt) {
   }
   return ret;
 }
-#elif defined(__unix__) || defined(__unix) || defined(__APPLE__)
+#else
+#if defined(unix) || defined(__APPLE__)
 /* f: name of file to get info on, tmzip: return value: access,
    modification and creation times, dt: dostime */
 static int filetime(const char *f, tm_zip *tmzip, uLong *dt) {
@@ -226,7 +226,7 @@ static int isLargeFile(const char* filename) {
     FSEEKO_FUNC(pFile, 0, SEEK_END);
     pos = (ZPOS64_T)FTELLO_FUNC(pFile);
 
-                printf("File : %s is %"PUI64" bytes\n", filename, pos);
+                printf("File : %s is %llu bytes\n", filename, pos);
 
     if(pos >= 0xffffffff)
      largeFile = 1;

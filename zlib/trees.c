@@ -1,5 +1,5 @@
 /* trees.c -- output deflated data using Huffman coding
- * Copyright (C) 1995-2026 Jean-loup Gailly
+ * Copyright (C) 1995-2024 Jean-loup Gailly
  * detect_data_type() function provided freely by Cosmin Truta, 2006
  * For conditions of distribution and use, see copyright notice in zlib.h
  */
@@ -152,7 +152,7 @@ local TCONST static_tree_desc static_bl_desc =
  * IN assertion: 1 <= len <= 15
  */
 local unsigned bi_reverse(unsigned code, int len) {
-    unsigned res = 0;
+    register unsigned res = 0;
     do {
         res |= code & 1;
         code >>= 1, res <<= 1;
@@ -184,11 +184,10 @@ local void bi_windup(deflate_state *s) {
     } else if (s->bi_valid > 0) {
         put_byte(s, (Byte)s->bi_buf);
     }
-    s->bi_used = ((s->bi_valid - 1) & 7) + 1;
     s->bi_buf = 0;
     s->bi_valid = 0;
 #ifdef ZLIB_DEBUG
-    s->bits_sent = (s->bits_sent + 7) & ~(ulg)7;
+    s->bits_sent = (s->bits_sent + 7) & ~7;
 #endif
 }
 
@@ -934,7 +933,7 @@ local void compress_block(deflate_state *s, const ct_data *ltree,
             extra = extra_dbits[code];
             if (extra != 0) {
                 dist -= (unsigned)base_dist[code];
-                send_bits(s, (int)dist, extra); /* send the extra bits */
+                send_bits(s, dist, extra);   /* send the extra distance bits */
             }
         } /* literal or match pair ? */
 

@@ -118,6 +118,7 @@ static void change_file_date(const char *filename, uLong dosdate, tm_unz tmu_dat
   (void)dosdate;
   (void)tmu_date;
 #endif
+#endif
 }
 
 
@@ -186,7 +187,7 @@ static int makedir(const char *newdir) {
 
 static void do_banner(void) {
     printf("MiniUnz 1.1, demo of zLib + Unz package written by Gilles Vollant\n");
-    printf("more info at https://www.winimage.com/zLibDll/unzip.html\n\n");
+    printf("more info at http://www.winimage.com/zLibDll/unzip.html\n\n");
 }
 
 static void do_help(void) {
@@ -304,7 +305,7 @@ static int do_list(unzFile uf) {
 
 
 static int do_extract_currentfile(unzFile uf, const int* popt_extract_without_path, int* popt_overwrite, const char* password) {
-    char filename_inzip[65536+1];
+    char filename_inzip[256];
     char* filename_withoutpath;
     char* p;
     int err=UNZ_OK;

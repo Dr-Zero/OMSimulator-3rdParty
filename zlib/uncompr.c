@@ -26,8 +26,8 @@
 
      The _z versions of the functions take size_t length arguments.
 */
-int ZEXPORT uncompress2_z(Bytef *dest, z_size_t *destLen, const Bytef *source,
-                          z_size_t *sourceLen) {
+int ZEXPORT uncompress2(Bytef *dest, uLongf *destLen, const Bytef *source,
+                        uLong *sourceLen) {
     z_stream stream;
     int err;
     const uInt max = (uInt)-1;
@@ -80,22 +80,8 @@ int ZEXPORT uncompress2_z(Bytef *dest, z_size_t *destLen, const Bytef *source,
            err == Z_BUF_ERROR && len == 0 ? Z_DATA_ERROR :
            err;
 }
-int ZEXPORT uncompress2(Bytef *dest, uLongf *destLen, const Bytef *source,
-                        uLong *sourceLen) {
-    int ret;
-    z_size_t got = *destLen, used = *sourceLen;
-    ret = uncompress2_z(dest, &got, source, &used);
-    *sourceLen = (uLong)used;
-    *destLen = (uLong)got;
-    return ret;
-}
-int ZEXPORT uncompress_z(Bytef *dest, z_size_t *destLen, const Bytef *source,
-                         z_size_t sourceLen) {
-    z_size_t used = sourceLen;
-    return uncompress2_z(dest, destLen, source, &used);
-}
+
 int ZEXPORT uncompress(Bytef *dest, uLongf *destLen, const Bytef *source,
                        uLong sourceLen) {
-    uLong used = sourceLen;
-    return uncompress2(dest, destLen, source, &used);
+    return uncompress2(dest, destLen, source, &sourceLen);
 }

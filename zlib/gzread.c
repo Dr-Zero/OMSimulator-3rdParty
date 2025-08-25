@@ -8,13 +8,7 @@
 /* Use read() to load a buffer -- return -1 on error, otherwise 0.  Read from
    state->fd, and update state->eof, state->err, and state->msg as appropriate.
    This function needs to loop on read(), since read() is not guaranteed to
-   read the number of bytes requested, depending on the type of descriptor. It
-   also needs to loop to manage the fact that read() returns an int. If the
-   descriptor is non-blocking and read() returns with no data in order to avoid
-   blocking, then gz_load() will return 0 if some data has been read, or -1 if
-   no data has been read. Either way, state->again is set true to indicate a
-   non-blocking event. If errno is non-zero on return, then there was an error
-   signaled from read().  *have is set to the number of bytes read. */
+   read the number of bytes requested, depending on the type of descriptor. */
 local int gz_load(gz_statep state, unsigned char *buf, unsigned len,
                   unsigned *have) {
     int ret;
@@ -171,12 +165,9 @@ local int gz_look(gz_statep state) {
 
 /* Decompress from input to the provided next_out and avail_out in the state.
    On return, state->x.have and state->x.next point to the just decompressed
-   data. If the gzip stream completes, state->how is reset to LOOK to look for
-   the next gzip stream or raw data, once state->x.have is depleted. Returns 0
-   on success, -1 on failure. If EOF is reached when looking for more input to
-   complete the gzip member, then an unexpected end of file error is raised.
-   If there is no more input, but state->again is true, then EOF has not been
-   reached, and no error is raised. */
+   data.  If the gzip stream completes, state->how is reset to LOOK to look for
+   the next gzip stream or raw data, once state->x.have is depleted.  Returns 0
+   on success, -1 on failure. */
 local int gz_decomp(gz_statep state) {
     int ret = Z_OK;
     unsigned had;
@@ -276,9 +267,8 @@ local int gz_fetch(gz_statep state) {
     return 0;
 }
 
-/* Skip state->skip (> 0) uncompressed bytes of output.  Return -1 on error, 0
-   on success. */
-local int gz_skip(gz_statep state) {
+/* Skip len uncompressed bytes of output.  Return -1 on error, 0 on success. */
+local int gz_skip(gz_statep state, z_off64_t len) {
     unsigned n;
 
     /* skip over len bytes or reach end-of-file, whichever comes first */
@@ -309,11 +299,9 @@ local int gz_skip(gz_statep state) {
 }
 
 /* Read len bytes into buf from file, or less than len up to the end of the
-   input. Return the number of bytes read. If zero is returned, either the end
-   of file was reached, or there was an error. state->err must be consulted in
-   that case to determine which. If there was an error, but some uncompressed
-   bytes were read before the error, then that count is returned. The error is
-   still recorded, and so is deferred until the next call. */
+   input.  Return the number of bytes read.  If zero is returned, either the
+   end of file was reached, or there was an error.  state->err must be
+   consulted in that case to determine which. */
 local z_size_t gz_read(gz_statep state, voidp buf, z_size_t len) {
     z_size_t got;
     unsigned n;
@@ -436,8 +424,7 @@ int ZEXPORT gzread(gzFile file, voidp buf, unsigned len) {
 }
 
 /* -- see zlib.h -- */
-z_size_t ZEXPORT gzfread(voidp buf, z_size_t size, z_size_t nitems,
-                         gzFile file) {
+z_size_t ZEXPORT gzfread(voidp buf, z_size_t size, z_size_t nitems, gzFile file) {
     z_size_t len;
     gz_statep state;
 
@@ -509,7 +496,14 @@ int ZEXPORT gzungetc(int c, gzFile file) {
     if (file == NULL)
         return -1;
     state = (gz_statep)file;
-    if (state->mode != GZ_READ)
+
+    /* in case this was just opened, set up the input buffer */
+    if (state->mode == GZ_READ && state->how == LOOK && state->x.have == 0)
+        (void)gz_look(state);
+
+    /* check that we're reading and that there's no (serious) error */
+    if (state->mode != GZ_READ ||
+        (state->err != Z_OK && state->err != Z_BUF_ERROR))
         return -1;
 
     /* in case this was just opened, set up the input buffer */

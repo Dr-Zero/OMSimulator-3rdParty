@@ -419,7 +419,7 @@ static void gz_uncompress(gzFile in, FILE *out) {
  * original.
  */
 static void file_compress(char *file, char *mode) {
-    local char outfile[MAX_NAME_LEN+1], *end;
+    local char outfile[MAX_NAME_LEN];
     FILE  *in;
     gzFile out;
 
@@ -452,7 +452,7 @@ static void file_compress(char *file, char *mode) {
  * Uncompress the given file and remove the original.
  */
 static void file_uncompress(char *file) {
-    local char buf[MAX_NAME_LEN+1];
+    local char buf[MAX_NAME_LEN];
     char *infile, *outfile;
     FILE  *out;
     gzFile in;

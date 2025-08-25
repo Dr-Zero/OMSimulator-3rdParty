@@ -1,4 +1,5 @@
-cmake_minimum_required(VERSION 3.12...3.31)
+cmake_minimum_required(VERSION 2.4.4...3.15.0)
+set(CMAKE_ALLOW_LOOSE_LOOP_CONSTRUCTS ON)
 
 project(
     zlib
@@ -200,42 +201,10 @@ if(ZLIB_BUILD_SHARED)
         AND NOT (CMAKE_SYSTEM_NAME STREQUAL SunOS))
 endif(ZLIB_BUILD_SHARED)
 
-if(ZLIB_BUILD_STATIC)
-    add_library(zlibstatic STATIC ${ZLIB_SRCS} ${ZLIB_PUBLIC_HDRS}
-                                  ${ZLIB_PRIVATE_HDRS})
-    add_library(ZLIB::ZLIBSTATIC ALIAS zlibstatic)
-    target_include_directories(
-        zlibstatic
-        PUBLIC $<BUILD_INTERFACE:${zlib_BINARY_DIR}>
-               $<BUILD_INTERFACE:${zlib_SOURCE_DIR}>
-               $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
-    target_compile_definitions(
-        zlibstatic
-        PRIVATE ZLIB_BUILD
-                $<$<BOOL:NOT:${HAVE_FSEEKO}>:NO_FSEEKO>
-                $<$<BOOL:${HAVE___ATTR__VIS_HIDDEN}>:HAVE_HIDDEN>
-                $<$<BOOL:${MSVC}>:_CRT_SECURE_NO_DEPRECATE>
-                $<$<BOOL:${MSVC}>:_CRT_NONSTDC_NO_DEPRECATE>
-        PUBLIC $<$<BOOL:${HAVE_OFF64_T}>:_LARGEFILE64_SOURCE=1>)
-    set_target_properties(
-        zlibstatic PROPERTIES EXPORT_NAME ZLIBSTATIC OUTPUT_NAME
-                                                     z${zlib_static_suffix})
-endif(ZLIB_BUILD_STATIC)
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+add_library(zlibstatic STATIC ${ZLIB_SRCS} ${ZLIB_PUBLIC_HDRS} ${ZLIB_PRIVATE_HDRS})
+target_include_directories(zlibstatic PUBLIC ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR})
 
-if(ZLIB_INSTALL)
-    if(ZLIB_BUILD_SHARED)
-        install(
-            TARGETS zlib
-            COMPONENT Runtime
-            EXPORT zlibSharedExport
-            RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
-            ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
-            LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}")
-        install(
-            EXPORT zlibSharedExport
-            FILE ZLIB-shared.cmake
-            NAMESPACE ZLIB::
-            DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/zlib)
 
         if(MSVC)
             install(
