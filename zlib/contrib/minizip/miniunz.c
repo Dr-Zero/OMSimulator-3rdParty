@@ -132,6 +132,8 @@ static int mymkdir(const char* dirname) {
     ret = mkdir (dirname,0775);
 #else
     (void)dirname;
+#else
+    (void)dirname;
 #endif
     return ret;
 }
