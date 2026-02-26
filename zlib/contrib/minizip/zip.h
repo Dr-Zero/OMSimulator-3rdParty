@@ -133,7 +133,7 @@ extern zipFile ZEXPORT zipOpen64(const void *pathname, int append);
 /* Note : there is no delete function into a zipfile.
    If you want delete file into a zipfile, you must open a zipfile, and create another
    Of course, you can use RAW reading and writing to copy the file you did not want delete
-*/
+ */
 
 extern zipFile ZEXPORT zipOpen2(const char *pathname,
                                 int append,
@@ -326,6 +326,12 @@ extern int ZEXPORT zipCloseFileInZipRaw(zipFile file,
 extern int ZEXPORT zipCloseFileInZipRaw64(zipFile file,
                                           ZPOS64_T uncompressed_size,
                                           uLong crc32);
+
+extern int ZEXPORT zipAlreadyThere(zipFile file,
+                                   char const* name);
+/*
+  See if name is already in file's central directory.
+ */
 
 /*
   Close the current file in the zipfile, for file opened with

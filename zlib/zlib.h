@@ -1,7 +1,7 @@
 /* zlib.h -- interface of the 'zlib' general purpose compression library
-  version 1.3.1, January 22nd, 2024
+  version 1.3.2, February 17th, 2026
 
-  Copyright (C) 1995-2024 Jean-loup Gailly and Mark Adler
+  Copyright (C) 1995-2026 Jean-loup Gailly and Mark Adler
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -41,11 +41,11 @@
 extern "C" {
 #endif
 
-#define ZLIB_VERSION "1.3.1"
-#define ZLIB_VERNUM 0x1310
+#define ZLIB_VERSION "1.3.2"
+#define ZLIB_VERNUM 0x1320
 #define ZLIB_VER_MAJOR 1
 #define ZLIB_VER_MINOR 3
-#define ZLIB_VER_REVISION 1
+#define ZLIB_VER_REVISION 2
 #define ZLIB_VER_SUBREVISION 0
 
 /*
@@ -765,8 +765,8 @@ ZEXTERN int ZEXPORT deflateTune(z_streamp strm,
    returns Z_OK on success, or Z_STREAM_ERROR for an invalid deflate stream.
  */
 
-ZEXTERN uLong ZEXPORT deflateBound(z_streamp strm,
-                                   uLong sourceLen);
+ZEXTERN uLong ZEXPORT deflateBound(z_streamp strm, uLong sourceLen);
+ZEXTERN z_size_t ZEXPORT deflateBound_z(z_streamp strm, z_size_t sourceLen);
 /*
      deflateBound() returns an upper bound on the compressed size after
    deflation of sourceLen bytes.  It must be called after deflateInit() or
@@ -1268,8 +1268,10 @@ ZEXTERN uLong ZEXPORT zlibCompileFlags(void);
    type for lengths.  Note that a long is 32 bits on Windows.
 */
 
-ZEXTERN int ZEXPORT compress(Bytef *dest,   uLongf *destLen,
+ZEXTERN int ZEXPORT compress(Bytef *dest, uLongf *destLen,
                              const Bytef *source, uLong sourceLen);
+ZEXTERN int ZEXPORT compress_z(Bytef *dest, z_size_t *destLen,
+                               const Bytef *source, z_size_t sourceLen);
 /*
      Compresses the source buffer into the destination buffer.  sourceLen is
    the byte length of the source buffer.  Upon entry, destLen is the total size
@@ -1283,9 +1285,12 @@ ZEXTERN int ZEXPORT compress(Bytef *dest,   uLongf *destLen,
    buffer.
 */
 
-ZEXTERN int ZEXPORT compress2(Bytef *dest,   uLongf *destLen,
+ZEXTERN int ZEXPORT compress2(Bytef *dest, uLongf *destLen,
                               const Bytef *source, uLong sourceLen,
                               int level);
+ZEXTERN int ZEXPORT compress2_z(Bytef *dest, z_size_t *destLen,
+                                const Bytef *source, z_size_t sourceLen,
+                                int level);
 /*
      Compresses the source buffer into the destination buffer.  The level
    parameter has the same meaning as in deflateInit.  sourceLen is the byte
@@ -1300,14 +1305,17 @@ ZEXTERN int ZEXPORT compress2(Bytef *dest,   uLongf *destLen,
 */
 
 ZEXTERN uLong ZEXPORT compressBound(uLong sourceLen);
+ZEXTERN z_size_t ZEXPORT compressBound_z(z_size_t sourceLen);
 /*
      compressBound() returns an upper bound on the compressed size after
    compress() or compress2() on sourceLen bytes.  It would be used before a
    compress() or compress2() call to allocate the destination buffer.
 */
 
-ZEXTERN int ZEXPORT uncompress(Bytef *dest,   uLongf *destLen,
+ZEXTERN int ZEXPORT uncompress(Bytef *dest, uLongf *destLen,
                                const Bytef *source, uLong sourceLen);
+ZEXTERN int ZEXPORT uncompress_z(Bytef *dest, z_size_t *destLen,
+                                 const Bytef *source, z_size_t sourceLen);
 /*
      Decompresses the source buffer into the destination buffer.  sourceLen is
    the byte length of the source buffer.  On entry, *destLen is the total size
@@ -1324,8 +1332,10 @@ ZEXTERN int ZEXPORT uncompress(Bytef *dest,   uLongf *destLen,
    buffer with the uncompressed data up to that point.
 */
 
-ZEXTERN int ZEXPORT uncompress2(Bytef *dest,   uLongf *destLen,
+ZEXTERN int ZEXPORT uncompress2(Bytef *dest, uLongf *destLen,
                                 const Bytef *source, uLong *sourceLen);
+ZEXTERN int ZEXPORT uncompress2_z(Bytef *dest, z_size_t *destLen,
+                                  const Bytef *source, z_size_t *sourceLen);
 /*
      Same as uncompress, except that sourceLen is a pointer, where the
    length of the source is *sourceLen.  On return, *sourceLen is the number of
@@ -1535,7 +1545,11 @@ ZEXTERN z_size_t ZEXPORT gzfwrite(voidpc buf, z_size_t size,
    gzwrite() instead.
 */
 
+#if defined(STDC) || defined(Z_HAVE_STDARG_H)
 ZEXTERN int ZEXPORTVA gzprintf(gzFile file, const char *format, ...);
+#else
+ZEXTERN int ZEXPORTVA gzprintf();
+#endif
 /*
      Convert, format, compress, and write the arguments (...) to file under
    control of the string format, as in fprintf.  gzprintf returns the number of
@@ -1666,7 +1680,7 @@ ZEXTERN z_off_t ZEXPORT gzseek(gzFile file,
    would be before the current position.
 */
 
-ZEXTERN int ZEXPORT    gzrewind(gzFile file);
+ZEXTERN int ZEXPORT gzrewind(gzFile file);
 /*
      Rewind file. This function is supported only for reading.
 
@@ -1674,7 +1688,7 @@ ZEXTERN int ZEXPORT    gzrewind(gzFile file);
 */
 
 /*
-ZEXTERN z_off_t ZEXPORT    gztell(gzFile file);
+ZEXTERN z_off_t ZEXPORT gztell(gzFile file);
 
      Return the starting position for the next gzread or gzwrite on file.
    This position represents a number of bytes in the uncompressed data stream,
@@ -1733,7 +1747,7 @@ ZEXTERN int ZEXPORT gzdirect(gzFile file);
    gzip file reading and decompression, which may not be desired.)
 */
 
-ZEXTERN int ZEXPORT    gzclose(gzFile file);
+ZEXTERN int ZEXPORT gzclose(gzFile file);
 /*
      Flush all pending output for file, if necessary, close file and
    deallocate the (de)compression state.  Note that once file is closed, you
@@ -1863,14 +1877,14 @@ ZEXTERN uLong ZEXPORT crc32_combine(uLong crc1, uLong crc2, z_off_t len2);
    seq1 and seq2 with lengths len1 and len2, CRC-32 check values were
    calculated for each, crc1 and crc2.  crc32_combine() returns the CRC-32
    check value of seq1 and seq2 concatenated, requiring only crc1, crc2, and
-   len2. len2 must be non-negative.
+   len2. len2 must be non-negative, otherwise zero is returned.
 */
 
 /*
 ZEXTERN uLong ZEXPORT crc32_combine_gen(z_off_t len2);
 
      Return the operator corresponding to length len2, to be used with
-   crc32_combine_op(). len2 must be non-negative.
+   crc32_combine_op(). len2 must be non-negative, otherwise zero is returned.
 */
 
 ZEXTERN uLong ZEXPORT crc32_combine_op(uLong crc1, uLong crc2, uLong op);
@@ -1993,9 +2007,9 @@ ZEXTERN int ZEXPORT gzgetc_(gzFile file);       /* backward compatibility */
      ZEXTERN z_off_t ZEXPORT gzseek64(gzFile, z_off_t, int);
      ZEXTERN z_off_t ZEXPORT gztell64(gzFile);
      ZEXTERN z_off_t ZEXPORT gzoffset64(gzFile);
-     ZEXTERN uLong ZEXPORT adler32_combine64(uLong, uLong, z_off_t);
-     ZEXTERN uLong ZEXPORT crc32_combine64(uLong, uLong, z_off_t);
-     ZEXTERN uLong ZEXPORT crc32_combine_gen64(z_off_t);
+     ZEXTERN uLong ZEXPORT adler32_combine64(uLong, uLong, z_off64_t);
+     ZEXTERN uLong ZEXPORT crc32_combine64(uLong, uLong, z_off64_t);
+     ZEXTERN uLong ZEXPORT crc32_combine_gen64(z_off64_t);
 #  endif
 #else
    ZEXTERN gzFile ZEXPORT gzopen(const char *, const char *);

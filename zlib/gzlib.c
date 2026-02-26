@@ -1,5 +1,5 @@
 /* gzlib.c -- zlib functions common to reading and writing gzip files
- * Copyright (C) 2004-2024 Mark Adler
+ * Copyright (C) 2004-2026 Mark Adler
  * For conditions of distribution and use, see copyright notice in zlib.h
  */
 
@@ -13,7 +13,6 @@
 #  define LSEEK lseek64
 #else
 #  define LSEEK lseek
-#endif
 #endif
 
 #if defined UNDER_CE
@@ -599,6 +598,7 @@ unsigned ZLIB_INTERNAL gz_intmax(void) {
     return INT_MAX;
 #else
     unsigned p = 1, q;
+
     do {
         q = p;
         p <<= 1;
